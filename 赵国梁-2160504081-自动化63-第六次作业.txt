@@ -1,0 +1,347 @@
+代码
+
+1.在测试图像上产生高斯噪声lena图-需能指定均值和方差；并用多种滤波器恢
+复图像，分析各自优缺点；
+
+高斯噪声
+close all
+clc
+clear
+[I,map]=imread('lena.bmp');
+figure(1);
+subplot(2,3,1)
+imshow(I);
+title('原图');
+subplot(2,3,2)
+I1=imnoise(I,'gaussian',0,0.01);
+imshow(I1);
+title('加入gaussian噪声后(0 0.01)');
+I2=imnoise(I,'gaussian',0,0.05);
+subplot(2,3,3)
+imshow(I2);
+title('加入gaussian噪声后(0 0.05)');
+I3=imnoise(I,'gaussian',0,0.1);
+subplot(2,3,4)
+imshow(I3);
+title('加入gaussian噪声后(0 0.1)');
+I4=imnoise(I,'gaussian',0.1,0.01);
+subplot(2,3,5)
+imshow(I4);
+title('加入gaussian噪声后(0.1 0.01)');
+I5=imnoise(I,'gaussian',0.5,0.01);
+subplot(2,3,6)
+imshow(I5);
+title('加入gaussian噪声后(0.5 0.01)');
+
+
+高斯噪声恢复原图：
+lose all; clear all; clc;  
+I=imread('lena.bmp'); 
+g=imnoise(I,'gaussian',0,0.01); 
+figure(1) 
+subplot(1,2,1);imshow(I);title('lena'); 
+subplot(1,2,2);imshow(g);title('lena+gaussian'); 
+[x,y]=size(I);  
+I=double(I); 
+A=zeros(x+8,y+8); 
+A(1,5:y+4)=I(1,:);
+A(2,5:y+4)=I(1,:); 
+A(3,5:y+4)=I(1,:); 
+A(4,5:y+4)=I(1,:); 
+A(x+5,5:y+4)=I(x,:); 
+A(x+6,5:y+4)=I(x,:);
+A(x+7,5:y+4)=I(x,:); 
+A(x+8,5:y+4)=I(x,:);
+A(5:x+4,5:y+4)=I; 
+A(:,1)=A(:,5); 
+A(:,2)=A(:,5); 
+A(:,3)=A(:,5); 
+A(:,4)=A(:,5); 
+A(:,y+5)=A(:,y+4); 
+A(:,y+6)=A(:,y+4); 
+A(:,y+7)=A(:,y+4); 
+A(:,y+8)=A(:,y+4); 
+%算术均值滤波器5*5 
+A1=zeros(x+8,y+8); 
+for i=3:x+6  
+    for j=3:y+6
+B1=A(i-2:i+2,j-2:j+2);  
+m1=sum((sum(B1))')/25;  
+A1(i,j)=m1;  
+   end
+end
+I1=A1(5:x+4,5:y+4); 
+I1=uint8(I1); 
+%几何均值滤波器5*5 
+A2=zeros(x+8,y+8); 
+for i=3:x+6  
+    for j=3:y+6
+       B2=A(i-2:i+2,j-2:j+2);   
+m2=prod(prod(B2))^0.04;  
+A2(i,j)=m2;  
+    end
+end
+I2=A2(5:x+4,5:y+4); 
+I2=uint8(I2); 
+%谐波均值滤波器5*5 
+A3=zeros(x+8,y+8); 
+for i=3:x+6  
+    for j=3:y+6
+        B3=A(i-2:i+2,j-2:j+2);   
+B3=1./B3; 
+ m3=25/(sum((sum(B3))'));  
+A3(i,j)=m3;  
+    end
+end
+II3=A3(5:x+4,5:y+4); 
+I3=255.*II3./max(max(II3)); I3=uint8(I3); 
+%逆谐波均值滤波器5*5 
+Q=1; 
+A4=zeros(x+8,y+8); 
+for i=3:x+6  
+    for j=3:y+6
+        B4=A(i-2:i+2,j-2:j+2);  
+ m4=((sum(sum(B4.^(Q+1)))'))/((sum(sum(B4.^Q))'));  
+A4(i,j)=m4;  
+    end
+end
+II4=A4(5:x+4,5:y+4); 
+I4=255.*II4./max(max(II4)); 
+I4=uint8(I4); 
+figure(2) 
+subplot(2,2,1);imshow(I1); title('算术均值滤波器'); 
+subplot(2,2,2);imshow(I2); title('几何均值滤波器'); 
+subplot(2,2,3);imshow(I3); title('谐波均值滤波器'); 
+subplot(2,2,4);imshow(I4); title('逆谐波均值滤波器Q=1'); 
+% 中值滤波器5*5 
+A5=zeros(x+8,y+8); 
+for i=3:x+6  
+    for j=3:y+6
+        B5=A(i-2:i+2,j-2:j+2);  
+e=B5(:);  
+        m5=median(e);  
+        A5(i,j)=m5;  
+    end
+end
+I5=A5(5:x+4,5:y+4); 
+I5=uint8(I5); 
+% 最大值滤波器5*5 
+A6=zeros(x+8,y+8); 
+for i=3:x+6  
+    for j=3:y+6
+        B6=A(i-2:i+2,j-2:j+2);  
+m6=max(max(B6));  
+        A6(i,j)=m6;
+    end
+end
+I6=A6(5:x+4,5:y+4); 
+I6=uint8(I6); 
+% 最小值滤波器5*5 
+A7=zeros(x+8,y+8); 
+for i=3:x+6  
+    for j=3:y+6
+       B7=A(i-2:i+2,j-2:j+2);  
+m7=min(min(B7));  
+ A7(i,j)=m7;  
+    end
+end
+I7=A7(5:x+4,5:y+4); 
+I7=uint8(I7);  
+% 修正阿尔法滤波器5*5 
+A8=zeros(x+8,y+8); 
+for i=3:x+6
+    for j=3:y+6
+        B8=A(i-2:i+2,j-2:j+2);  
+B8=sort(B8(:)); 
+        c=B8(6:20); 
+        m8=(sum(c))/15; 
+        A8(i,j)=m8;  
+    end
+end
+I8=A8(5:x+4,5:y+4); 
+I8=uint8(I8); 
+figure(3) 
+subplot(2,2,1);imshow(I5); title('中值滤波器'); 
+subplot(2,2,2);imshow(I6); title('最大值滤波器'); 
+subplot(2,2,3);imshow(I7); title('最小值滤波器'); 
+subplot(2,2,4);imshow(I8); title('修正阿尔法滤波器'); 
+% 自适应局部降噪滤波器5*5 
+A9=zeros(x+8,y+8); 
+for i=3:x+6  
+    for j=3:y+6
+        B9=A(i-2:i+2,j-2:j+2);  
+m9=mean(B9(:)); 
+        n9=var(B9(:));
+        if n9<0.01 
+             A9(i,j)=A(i,j)-1*(A(i,j)-m9);  
+else
+A9(i,j)=A(i,j)-(0.01/n9)*(A(i,j)-m9);
+        end
+    end
+end
+II9=A9(5:x+4,5:y+4); 
+I9=255.*II9./max(max(II9)); 
+I9=uint8(I9); 
+%自适应中值滤波器 
+I10=adpmedian(g,7); 
+I10=uint8(I10); 
+figure(4) 
+subplot(1,2,1);imshow(I9); title('自适应局部降噪滤波器5*5'); 
+subplot(1,2,2);imshow(I10); title('自适应中值滤波器');
+
+2.在测试图像lena图加入椒盐噪声（椒和盐噪声密度均是0.1）；
+close all
+clc
+clear
+[I,map]=imread('lena.bmp');
+figure(1);
+subplot(1,2,1)
+imshow(I);
+title('原图');
+subplot(1,2,2)
+I1=imnoise(I,'salt & pepper',0.1);
+imshow(I1);
+title('加入椒盐噪声后');
+I2=sszz(I1,3);
+figure(2)
+subplot(2,2,1)
+imshow(I2); 
+title('算术均值滤波');
+I3=jhjz(I1,3);
+subplot(2,2,2)
+imshow(I3); 
+title('几何均值滤波');
+I4=xbjz(I1,3);
+subplot(2,2,3)
+imshow(I4); 
+title('谐波均值滤波');
+I5=nxbzz(I1,1.5,3);
+subplot(2,2,4)
+imshow(I5); 
+title('逆谐波均值滤波');
+figure(3)
+subplot(2,2,1)
+I6=zzlb(I1,3);
+imshow(I6)
+title('中值滤波');
+I7=max1(I1,3);
+subplot(2,2,2)
+imshow(I7); 
+title('最大值滤波');
+I8=minlb(I1,3);
+subplot(2,2,3)
+imshow(I8); 
+title('最小值滤波');
+I9=zdlb(I1,3);
+subplot(2,2,4)
+imshow(I9); 
+title('中点滤波');
+figure(4)
+subplot(1,2,1)
+imshow(I5);
+title('逆谐波Q为1.5');
+I10=nxbzz(I1,-1.5,3);
+subplot(1,2,2)
+imshow(I10);
+title('逆谐波Q为-1.5');
+
+3.推导维纳滤波器并实现下边要求；
+(a)	实现模糊滤波器如方程Eq. (5.6-11).
+(b)	模糊lena 图像：45 度方向，T=1；
+(c)	再模糊的 lena 图像中增加高斯噪声，均值= 0 ，方差=10 pixels 以产生模糊图像；
+(d)	分别利用方程 Eq. (5.8-6)和(5.9-4)，恢复图像；并分析算法的优缺点
+clc;clear; 
+A=imread('lena.bmp'); f=double(A); 
+[M,N]=size(A); 
+P=M;Q=N; 
+for x=1:P
+for y=1:Q
+         f(x,y)=[(-1)^(x+y)]*f(x,y);
+end
+end
+F=fft2(f); 
+T=1;a=0.1;b=0.1; 
+for u=1:P 
+    for v=1:Q 
+ H(u,v)=T/(pi*((u-M/2)*a+(v-N/2)*b))*sin(pi*((u-M/2)*a+(v-N/2)*b))*exp(-i*pi*((u-M/2)*a+(v-N/2)*b));
+if isnan(H(u, v)) == 1
+H(u, v) = 1;
+      end
+       G(u,v)=H(u,v)*F(u,v);
+    end
+end
+g=real(ifft2(G)); 
+for x=1:P
+for y=1:Q
+    g(x,y)=[(-1)^(x+y)]*g(x,y);
+end
+end
+m=min(min(g)); 
+g=g-m; 
+g=256*g/max(max(g)); 
+B=uint8(g); 
+var_n=10*10/512/512; 
+C=imnoise(B,'gaussian',0,var_n); 
+figure(1) 
+subplot(1,3,1);imshow(A);title('lena');  
+subplot(1,3,2);imshow(B);title('a=0.1 b=0.1 T=1'); 
+subplot(1,3,3);imshow(C);title('gaussian'); 
+
+
+%wiener 
+g1=double(C); 
+for x=1:P
+for y=1:Q
+     g1(x,y)=[(-1)^(x+y)]*g1(x,y);     
+end 
+end 
+G1=fft2(g1); 
+H1 = H .* conj(H); 
+k=0.001;
+F1 = (G .* H1) ./ (H .* (H1 + k)); 
+f1 = ifft2(F1); 
+f1 = real(f1); 
+for x=1:P
+for y=1:Q
+f1(x,y)=[(-1)^(x+y)]*f1(x,y);     
+end 
+end 
+m1=min(min(f1)); 
+f1=f1-m1; 
+f1=256*f1/max(max(f1)); 
+D=uint8(f1); 
+
+
+
+%CLSF 
+g2=double(C); 
+for x=1:P
+for y=1:Q
+g2(x,y)=[(-1)^(x+y)]*g2(x,y);     
+end 
+end 
+G2=fft2(g2); 
+p=[0,-1,0;-1,4,-1;0,-1,0]; 
+for x=1:3
+    for y=1:3
+p(x,y)=[(-1)^(x+y)]*p(x,y); 
+    end 
+end 
+Pa=fft2(p,512,512); 
+H1 = H .* conj(H); 
+P1 = Pa .* conj(Pa); 
+r=0.001; 
+F2 = (G .* conj(H)) ./ (H1 + r .* P1); f2 = ifft2(F2); 
+f2 = real(f2); 
+for x=1:P
+for y=1:Q
+f2(x,y)=[(-1)^(x+y)]*f2(x,y);    
+ end 
+end 
+m2=min(min(f2)); 
+f2=f2-m2; 
+f2=256*f2/max(max(f2)); 
+E=uint8(f2);
+figure(2) 
+subplot(1,2,1);imshow(D);title('wiener k=0.001'); 
+subplot(1,2,2);imshow(E);title('CLSF r=0.001');
